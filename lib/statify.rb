@@ -46,33 +46,33 @@ module Statify
         # Don't include explains or schema DB calls
         unless ["EXPLAIN", "SCHEMA"].include?(event.payload[:name])
           # # We are hoping this gives us basic metris for query durations for us to track.
-          @@statsd.timing "#{event.name}", event.duration
+          @@statsd.measure "#{event.name}", event.duration
         end
       end
     end
 
     if Statify.categories.include?(:garbage_collection) || Statify.categories.include?(:controller)
       # This should give us reports on average response times by controller and action
-      ActiveSupport::Notifications.subscribe "process_action.action_controller" do |*args|      
+      ActiveSupport::Notifications.subscribe "process_action.action_controller" do |*args|
         event = ActiveSupport::Notifications::Event.new(*args)
-        
+
         if Statify.categories.include?(:garbage_collection)
           # Let's log the GC
-          gc_stats = GC::stat 
-          @@statsd.count('gc_count', gc_stats[:count])
-          @@statsd.count('gc_heap_used', gc_stats[:heap_used])
-          @@statsd.count('gc_heap_length', gc_stats[:heap_length])
-          @@statsd.count('gc_heap_increment', gc_stats[:heap_increment])
-          @@statsd.count('gc_heap_live_num', gc_stats[:heap_live_num])
-          @@statsd.count('gc_heap_free_num', gc_stats[:heap_live_num])
-          @@statsd.count('gc_heap_final_num', gc_stats[:heap_live_num])
+          gc_stats = GC::stat
+          @@statsd.increment('gc_count', gc_stats[:count])
+          @@statsd.increment('gc_heap_used', gc_stats[:heap_used])
+          @@statsd.increment('gc_heap_length', gc_stats[:heap_length])
+          @@statsd.increment('gc_heap_increment', gc_stats[:heap_increment])
+          @@statsd.increment('gc_heap_live_num', gc_stats[:heap_live_num])
+          @@statsd.increment('gc_heap_free_num', gc_stats[:heap_live_num])
+          @@statsd.increment('gc_heap_final_num', gc_stats[:heap_live_num])
         end
 
         if Statify.categories.include?(:controller)
           # Track overall, db and view durations
-          @@statsd.timing "overall_duration|#{event.payload[:controller]}/#{event.payload[:action]}", event.duration
-          @@statsd.timing "db_runtime|#{event.payload[:controller]}/#{event.payload[:action]}", event.payload[:db_runtime]
-          @@statsd.timing "view_runtime|#{event.payload[:controller]}/#{event.payload[:action]}", event.payload[:view_runtime]
+          @@statsd.measure "overall_duration|#{event.payload[:controller]}/#{event.payload[:action]}", event.duration
+          @@statsd.measure "db_runtime|#{event.payload[:controller]}/#{event.payload[:action]}", event.payload[:db_runtime]
+          @@statsd.measure "view_runtime|#{event.payload[:controller]}/#{event.payload[:action]}", event.payload[:view_runtime]
         end
       end
     end

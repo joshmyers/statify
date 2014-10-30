@@ -29,7 +29,7 @@ module Statify
       if RUBY_VERSION < '1.9'
         # Fail and tell the user to remove the GC stats
         fail "The GC stats don't work in Ruby 1.8.7.  Please remove the :grabage_collection from the categories"
-        @@stats.delete(:grabage_collection)
+        @@stats.delete(:garbage_collection)
       end
     end
   end
